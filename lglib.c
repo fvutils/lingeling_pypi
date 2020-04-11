@@ -20,9 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#else
 #include <sys/resource.h>
-#include <sys/time.h>
 #include <unistd.h>
+#include <sys/time.h>
+#endif
 #include <stddef.h>
 
 /*-------------------------------------------------------------------------*/
@@ -153,27 +156,27 @@ do { \
 #else /* end of then start of else part of 'ifndef NLGLOG' */
 /*------------------------------------------------------------------------*/
 
-#define LOG(ARGS...) do { } while (0)
-#define LOGCLS(ARGS...) do { } while (0)
-#define LOGMCLS(ARGS...) do { } while (0)
-#define LOGRESOLVENT(ARGS...) do { } while (0)
-#define LOGREASON(ARGS...) do { } while (0)
-#define LOGDSCHED(ARGS...) do { } while (0)
-#define LOGESCHED(ARGS...) do { } while (0)
-#define LOGEQN(ARGS...) do { } while (0)
+#define LOG(...) do { } while (0)
+#define LOGCLS(...) do { } while (0)
+#define LOGMCLS(...) do { } while (0)
+#define LOGRESOLVENT(...) do { } while (0)
+#define LOGREASON(...) do { } while (0)
+#define LOGDSCHED(...) do { } while (0)
+#define LOGESCHED(...) do { } while (0)
+#define LOGEQN(...) do { } while (0)
 
 /*------------------------------------------------------------------------*/
 #endif /* end of else part of 'ifndef NLGLOG' */
 /*------------------------------------------------------------------------*/
 
-#define ABORTIF(COND,FMT,ARGS...) \
+#define ABORTIF(COND,FMT,...) \
 do { \
   if (!(COND)) break; \
   fprintf (stderr, "*** API usage error of '%s' in '%s'", \
 	   __FILE__, __FUNCTION__); \
   if (lgl && lgl->tid >= 0) fprintf (stderr, " (tid %d)", lgl->tid); \
   fputs (": ", stderr); \
-  fprintf (stderr, FMT, ##ARGS); \
+  fprintf (stderr, FMT, __VA_ARGS__); \
   fputc ('\n', stderr); \
   fflush (stderr); \
   lglabort (lgl); \
@@ -218,13 +221,13 @@ do { \
 
 #define REQINITNOTFORKED() \
 do { \
-  REQINIT (); \
+  REQINIT(); \
   ABORTIF (lgl->forked, "forked manager"); \
 } while (0)
 
 #define REQUIRE(STATE) \
 do { \
-  REQINIT (); \
+  REQINIT(); \
   ABORTIF(!(lgl->state & (STATE)), "!(%s)", #STATE); \
 } while (0)
 
@@ -243,10 +246,10 @@ do { \
 
 /*------------------------------------------------------------------------*/
 
-#define TRAPI(MSG,ARGS...) \
+#define TRAPI(MSG,...) \
 do { \
   if (!lgl->apitrace) break; \
-  lgltrapi (lgl, MSG, ##ARGS); \
+  lgltrapi (lgl, MSG, __VA_ARGS__); \
 } while (0)
 
 #define LGLCHKACT(ACT) \
@@ -1289,12 +1292,17 @@ static void lglogstart (LGL * lgl, int level, const char * msg, ...) {
 /*------------------------------------------------------------------------*/
 
 double lglprocesstime (void) {
+#ifndef _WIN32
   struct rusage u;
   double res;
   if (getrusage (RUSAGE_SELF, &u)) return 0;
   res = u.ru_utime.tv_sec + 1e-6 * u.ru_utime.tv_usec;
   res += u.ru_stime.tv_sec + 1e-6 * u.ru_stime.tv_usec;
   return res;
+#else
+  // TODO:
+  return 0;
+#endif
 }
 
 static double lglgetime (LGL * lgl) {
@@ -1433,7 +1441,7 @@ static void * lglrsz (LGL * lgl, void * ptr, size_t old, size_t new) {
   assert (res);
   LOG (5, "reallocating %p to %p from %ld to %ld bytes", ptr, res, old, new);
   lglinc (lgl, new);
-  if (new > old) memset (res + old, 0, new - old);
+  if (new > old) memset ((char *)res + old, 0, new - old);
   return res;
 }
 
@@ -25180,7 +25188,7 @@ static void lglgluestats (LGL * lgl) {
      sadded, sreduced, sretired, sforcing, sresolved, sconflicts);
 }
 
-typedef struct TN { double t; const char * n; } TN;
+typedef struct TN_s { double t; const char * n; } TN;
 
 static int lglcmptn (const TN * a, const TN * b) {
   if (a->t > b->t) return -1;
@@ -25201,7 +25209,11 @@ do { \
 static void lglprofsort (LGL * lgl) {
   int i, ntns, nimportant, nprint;
   Times * ts = lgl->times;
+#ifdef _WIN32
+#define sztns 100
+#else
   const int sztns = 100;
+#endif
   TN tns[sztns];
   double sum;
 

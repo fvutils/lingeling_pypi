@@ -8,6 +8,7 @@ LDEPS=@LDEPS@
 HDEPS=@HDEPS@
 EXTRAOBJS=@EXTRAOBJS@
 AIGER=@AIGER@
+OBJEXT=@OBJEXT@
 
 all: targets
 
@@ -22,51 +23,54 @@ targets: @AIGERTARGETS@
 analyze:
 	clang --analyze $(CFLAGS) $(shell ls *.c *.h)
 
-liblgl.a: lglib.o lglbnr.o lgldimacs.o lglopts.o makefile $(EXTRAOBJS)
-	ar rc $@ lglib.o lglbnr.o lgldimacs.o lglopts.o $(EXTRAOBJS)
+liblgl.a: lglib$(OBJEXT) lglbnr$(OBJEXT) lgldimacs$(OBJEXT) lglopts$(OBJEXT) makefile $(EXTRAOBJS)
+	ar rc $@ lglib$(OBJEXT) lglbnr$(OBJEXT) lgldimacs$(OBJEXT) lglopts$(OBJEXT) $(EXTRAOBJS)
 	ranlib $@
 
-lingeling: lglmain.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -o $@ lglmain.o -L. -llgl $(LIBS)
-plingeling: plingeling.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -pthread -o $@ plingeling.o -L. -llgl $(LIBS)
-treengeling: treengeling.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -pthread -o $@ treengeling.o -L. -llgl $(LIBS)
-blimc: blimc.o liblgl.a makefile $(AIGER)/aiger.o $(LDEPS)
-	$(CC) $(CFLAGS) -o $@ blimc.o -L. $(AIGER)/aiger.o -llgl $(LIBS)
-ilingeling: ilingeling.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -pthread -o $@ ilingeling.o -L. -llgl $(LIBS)
-lglmbt: lglmbt.o liblgl.a $(LDEPS)
-	$(CC) $(CFLAGS) -o $@ lglmbt.o -L. -llgl $(LIBS)
-lgluntrace: lgluntrace.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -o $@ lgluntrace.o -L. -llgl $(LIBS)
-lglddtrace: lglddtrace.o liblgl.a makefile $(LDEPS)
-	$(CC) $(CFLAGS) -o $@ lglddtrace.o -L. -llgl $(LIBS)
+liblgl.lib : lglib.obj lglbnr.obj lgldimacs.obj lglopts.obj
+	lib -nologo -out:$@ $^
 
-lglmain.o: lglmain.c lglib.h makefile
+lingeling: lglmain$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -o $@ lglmain$(OBJEXT) -L. -llgl $(LIBS)
+plingeling: plingeling$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -pthread -o $@ plingeling$(OBJEXT) -L. -llgl $(LIBS)
+treengeling: treengeling$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -pthread -o $@ treengeling$(OBJEXT) -L. -llgl $(LIBS)
+blimc: blimc$(OBJEXT) liblgl.a makefile $(AIGER)/aiger$(OBJEXT) $(LDEPS)
+	$(CC) $(CFLAGS) -o $@ blimc$(OBJEXT) -L. $(AIGER)/aiger$(OBJEXT) -llgl $(LIBS)
+ilingeling: ilingeling$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -pthread -o $@ ilingeling$(OBJEXT) -L. -llgl $(LIBS)
+lglmbt: lglmbt$(OBJEXT) liblgl.a $(LDEPS)
+	$(CC) $(CFLAGS) -o $@ lglmbt$(OBJEXT) -L. -llgl $(LIBS)
+lgluntrace: lgluntrace$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -o $@ lgluntrace$(OBJEXT) -L. -llgl $(LIBS)
+lglddtrace: lglddtrace$(OBJEXT) liblgl.a makefile $(LDEPS)
+	$(CC) $(CFLAGS) -o $@ lglddtrace$(OBJEXT) -L. -llgl $(LIBS)
+
+lglmain$(OBJEXT): lglmain.c lglib.h makefile
 	$(CC) $(CFLAGS) -c lglmain.c
-plingeling.o: plingeling.c lglib.h makefile
+plingeling$(OBJEXT): plingeling.c lglib.h makefile
 	$(CC) $(CFLAGS) -c plingeling.c
-treengeling.o: treengeling.c lglib.h makefile
+treengeling$(OBJEXT): treengeling.c lglib.h makefile
 	$(CC) $(CFLAGS) -c treengeling.c
-ilingeling.o: ilingeling.c lglib.h makefile
+ilingeling$(OBJEXT): ilingeling.c lglib.h makefile
 	$(CC) $(CFLAGS) -c ilingeling.c
-blimc.o: blimc.c lglib.h $(AIGER)/aiger.h makefile
+blimc$(OBJEXT): blimc.c lglib.h $(AIGER)/aiger.h makefile
 	$(CC) $(CFLAGS) -I$(AIGER) -c -o $@ blimc.c
-lglmbt.o: lglmbt.c lglib.h makefile
+lglmbt$(OBJEXT): lglmbt.c lglib.h makefile
 	$(CC) $(CFLAGS) -c lglmbt.c
-lgluntrace.o: lgluntrace.c lglib.h makefile
+lgluntrace$(OBJEXT): lgluntrace.c lglib.h makefile
 	$(CC) $(CFLAGS) -c lgluntrace.c
-lglddtrace.o: lglddtrace.c lglib.h makefile
+lglddtrace$(OBJEXT): lglddtrace.c lglib.h makefile
 	$(CC) $(CFLAGS) -c lglddtrace.c
 
-lglib.o: lglib.c lglib.h lglconst.h lgloptl.h lglopts.h makefile $(HDEPS)
+lglib$(OBJEXT): lglib.c lglib.h lglconst.h lgloptl.h lglopts.h makefile $(HDEPS)
 	$(CC) $(CFLAGS) -c lglib.c
-lgldimacs.o: lgldimacs.c lgldimacs.h makefile
+lgldimacs$(OBJEXT): lgldimacs.c lgldimacs.h makefile
 	$(CC) $(CFLAGS) -c lgldimacs.c
-lglbnr.o: lglbnr.c lglcfg.h lglcflags.h makefile
+lglbnr$(OBJEXT): lglbnr.c lglcfg.h lglcflags.h makefile
 	$(CC) $(CFLAGS) -c lglbnr.c
-lglopts.o: lglopts.c lglopts.h lglconst.h lgloptl.h makefile
+lglopts$(OBJEXT): lglopts.c lglopts.h lglconst.h lgloptl.h makefile
 	$(CC) $(CFLAGS) -c lglopts.c
 
 lglcfg.h: VERSION mkconfig.sh lglbnr.c lglib.c lglmain.c lglcflags.h makefile
@@ -84,6 +88,6 @@ clean-all:
 	rm -f lingeling plingeling ilingeling treengeling blimc
 	rm -f lglmbt lgluntrace lglddtrace
 	rm -f *.gcno *.gcda cscope.out gmon.out *.gcov *.gch *.plist
-	rm -f *.E *.o *.s *.a log/*.log 
+	rm -f *.E *$(OBJEXT) *.obj *.s *.a *.lib log/*.log 
 
 .PHONY: all targets clean clean-config clean-all

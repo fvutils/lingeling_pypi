@@ -266,6 +266,12 @@ fi
 
 echo "$CC $CFLAGS"
 
+if test `uname -o` == "Msys"; then
+    OBJEXT=.obj
+else
+    OBJEXT=.o
+fi
+
 ##########################################################################
 
 rm -f makefile
@@ -278,4 +284,5 @@ sed \
   -e "s,@AIGERTARGETS@,$AIGERTARGETS," \
   -e "s,@AIGER@,$AIGER," \
   -e "s,@LIBS@,$LIBS," \
+  -e "s,@OBJEXT@,$OBJEXT," \
   makefile.in > makefile
